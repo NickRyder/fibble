@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Fibble</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div>
+          <h1>Fibble</h1>
+          <p>Play Wordle or chaotic Fibble right in your browser.</p>
+        </div>
+        <a
+          class="hero-link"
+          href="https://github.com/nickryder/fibble"
+          target="_blank"
+          rel="noreferrer"
+          >View source</a
+        >
+      </header>
+
+      <section class="panel">
+        <h2>Start a new game</h2>
+        <form id="new-game-form" class="form-grid">
+          <label class="form-field">
+            <span>Game</span>
+            <select id="game-mode-select">
+              <option value="wordle">Wordle</option>
+              <option value="fibble">Fibble</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span>Style</span>
+            <select id="play-mode-select">
+              <option value="play">Play the puzzle</option>
+              <option value="notebook">Notebook helper</option>
+            </select>
+          </label>
+          <label class="form-field">
+            <span>Secret (optional)</span>
+            <input
+              id="secret-input"
+              type="text"
+              inputmode="text"
+              maxlength="5"
+              autocomplete="off"
+              placeholder="random"
+            />
+          </label>
+          <button type="submit" class="primary">Start game</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="status">
+          <p id="status-message">Loading word lists…</p>
+          <p id="attempts-remaining"></p>
+        </div>
+        <div class="board-layout">
+          <div class="board-column">
+            <div
+              id="board"
+              class="board"
+              aria-live="polite"
+              aria-label="Guess board"
+            >
+              <!-- rows injected by script -->
+            </div>
+          </div>
+          <aside class="entropy-panel" aria-live="polite">
+            <div class="entropy-panel-header">
+              <h3>Next guesses</h3>
+              <p>Ordered by expected entropy.</p>
+            </div>
+            <ol id="entropy-list" class="entropy-list">
+              <li class="entropy-empty">Start a game to see suggestions.</li>
+            </ol>
+          </aside>
+        </div>
+
+        <form id="guess-form" class="guess-form" autocomplete="off">
+          <label class="form-field" for="guess-input">
+            Enter a guess to continue playing.
+          </label>
+          <div class="guess-controls">
+            <input
+              id="guess-input"
+              type="text"
+              inputmode="text"
+              maxlength="5"
+              pattern="[A-Za-z]{5}"
+              aria-label="Guess"
+              placeholder="type a word"
+              autocomplete="off"
+              required
+            />
+            <button type="submit" class="primary">Submit guess</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>How it works</h2>
+        <ul class="rules">
+          <li>Green letters are correct, yellow letters are present elsewhere, gray letters are absent.</li>
+          <li>Wordle gives you six attempts to solve a random five-letter secret.</li>
+          <li>Fibble gives nine attempts, but <strong>one tile in every guess lies</strong> about its color.</li>
+          <li>When playing Fibble you receive an automatic random opener so you can focus on the deduction.</li>
+          <li>Switch the style to Notebook to track guesses from another Wordle or Fibble game, click tiles to match the feedback, and let the helper suggest what to guess next.</li>
+        </ul>
+      </section>
+    </main>
+    <script src="script.js" defer></script>
+  </body>
+</html>
