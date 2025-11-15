@@ -32,7 +32,7 @@
             <span>Game</span>
             <select id="game-mode-select">
               <option value="wordle">Wordle</option>
-              <option value="fibble">Fibble</option>
+              <option value="fibble" selected>Fibble</option>
             </select>
           </label>
           <label class="form-field">
@@ -76,11 +76,28 @@
           <aside class="entropy-panel" aria-live="polite">
             <div class="entropy-panel-header">
               <h3>Next guesses</h3>
-              <p>Ordered by expected entropy.</p>
+              <p>Sorted by expected entropy.</p>
             </div>
-            <ol id="entropy-list" class="entropy-list">
-              <li class="entropy-empty">Start a game to see suggestions.</li>
-            </ol>
+            <div class="entropy-columns">
+              <section class="entropy-column">
+                <h4>All guesses</h4>
+                <p class="entropy-subtitle">
+                  Best entropy even if the guess is not a valid answer.
+                </p>
+                <ol id="entropy-all-list" class="entropy-list">
+                  <li class="entropy-empty">Start a game to see suggestions.</li>
+                </ol>
+              </section>
+              <section class="entropy-column">
+                <h4>Possible answers</h4>
+                <p class="entropy-subtitle">
+                  Restricted to words still consistent with the clues.
+                </p>
+                <ol id="entropy-possible-list" class="entropy-list">
+                  <li class="entropy-empty">Start a game to see suggestions.</li>
+                </ol>
+              </section>
+            </div>
           </aside>
         </div>
 

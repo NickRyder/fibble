@@ -20,7 +20,7 @@
   };
 
   const state = {
-    gameMode: "wordle",
+    gameMode: "fibble",
     playMode: "play",
     secret: "",
     guesses: [],
@@ -29,7 +29,8 @@
 
   const entropyCache = {
     key: "",
-    results: [],
+    all: [],
+    possible: [],
   };
 
   const elements = {
@@ -43,8 +44,15 @@
     gameModeSelect: document.getElementById("game-mode-select"),
     playModeSelect: document.getElementById("play-mode-select"),
     secretInput: document.getElementById("secret-input"),
-    entropyList: document.getElementById("entropy-list"),
+    entropyAllList: document.getElementById("entropy-all-list"),
+    entropyPossibleList: document.getElementById("entropy-possible-list"),
   };
+
+  function resetEntropyCache() {
+    entropyCache.key = "";
+    entropyCache.all = [];
+    entropyCache.possible = [];
+  }
 
   init();
 
@@ -105,8 +113,7 @@
       state.playMode = selectedPlayMode;
       state.guesses = [];
       state.complete = false;
-      entropyCache.key = "";
-      entropyCache.results = [];
+      resetEntropyCache();
       state.secret = "";
       renderBoard();
       updateAttemptsText();
@@ -143,8 +150,7 @@
     state.secret = chosenSecret;
     state.guesses = [];
     state.complete = false;
-    entropyCache.key = "";
-    entropyCache.results = [];
+    resetEntropyCache();
 
     renderBoard();
     updateAttemptsText();
@@ -335,7 +341,7 @@
         ? Math.max(maxAttempts(), state.guesses.length + 1)
         : state.secret
         ? maxAttempts()
-        : MAX_ATTEMPTS.wordle;
+        : MAX_ATTEMPTS[state.gameMode] ?? MAX_ATTEMPTS.wordle;
     elements.board.innerHTML = "";
 
     let possibleSecretsForRender = null;
@@ -402,17 +408,17 @@
   }
 
   function renderEntropySuggestions(precomputedSecrets) {
-    if (!elements.entropyList) {
+    if (!elements.entropyAllList || !elements.entropyPossibleList) {
       return;
     }
 
     if (!data.ready) {
-      setEntropyListMessage("Loading suggestions…");
+      setEntropyMessages("Loading suggestions…");
       return;
     }
 
     if (!state.secret && state.playMode !== "notebook") {
-      setEntropyListMessage("Start a game to see suggestions.");
+      setEntropyMessages("Start a game to see suggestions.");
       return;
     }
 
@@ -424,30 +430,43 @@
         state.gameMode === "fibble"
           ? "Fibble lies make suggestions unreliable."
           : "No words match the given clues.";
-      setEntropyListMessage(message);
+      setEntropyMessages(message);
       return;
     }
 
     const cacheKey = buildEntropyCacheKey();
-    if (entropyCache.key === cacheKey && entropyCache.results.length) {
-      renderEntropyList(entropyCache.results);
+    if (
+      entropyCache.key === cacheKey &&
+      (entropyCache.all.length || entropyCache.possible.length)
+    ) {
+      renderEntropyLists(entropyCache);
       return;
     }
 
-    const ranked = rankGuessesByEntropy(possibleSecrets);
+    const rankedAll = rankGuessesByEntropy(possibleSecrets);
+    const rankedPossible = rankGuessesByEntropy(
+      possibleSecrets,
+      possibleSecrets
+    );
     entropyCache.key = cacheKey;
-    entropyCache.results = ranked;
-    renderEntropyList(ranked);
+    entropyCache.all = rankedAll;
+    entropyCache.possible = rankedPossible;
+    renderEntropyLists(entropyCache);
   }
 
-  function renderEntropyList(items) {
-    if (!elements.entropyList) {
+  function renderEntropyLists(cache) {
+    renderEntropyList(elements.entropyAllList, cache.all);
+    renderEntropyList(elements.entropyPossibleList, cache.possible);
+  }
+
+  function renderEntropyList(targetList, items) {
+    if (!targetList) {
       return;
     }
-    elements.entropyList.innerHTML = "";
+    targetList.innerHTML = "";
 
     if (!items.length) {
-      setEntropyListMessage("No suggestions available.");
+      setEntropyListMessage(targetList, "No suggestions available.");
       return;
     }
 
@@ -468,19 +487,24 @@
       row.appendChild(word);
       row.appendChild(entropyValue);
       li.appendChild(row);
-      elements.entropyList.appendChild(li);
+      targetList.appendChild(li);
     }
   }
 
-  function setEntropyListMessage(message) {
-    if (!elements.entropyList) {
+  function setEntropyMessages(message) {
+    setEntropyListMessage(elements.entropyAllList, message);
+    setEntropyListMessage(elements.entropyPossibleList, message);
+  }
+
+  function setEntropyListMessage(targetList, message) {
+    if (!targetList) {
       return;
     }
-    elements.entropyList.innerHTML = "";
+    targetList.innerHTML = "";
     const li = document.createElement("li");
     li.className = "entropy-empty";
     li.textContent = message;
-    elements.entropyList.appendChild(li);
+    targetList.appendChild(li);
   }
 
   function computePossibleSecrets() {
@@ -588,12 +612,12 @@
     return lieIndex;
   }
 
-  function rankGuessesByEntropy(possibleSecrets) {
-    if (!possibleSecrets.length) {
+  function rankGuessesByEntropy(possibleSecrets, guessPool = data.secrets) {
+    if (!possibleSecrets.length || !guessPool.length) {
       return [];
     }
     const remainingSet = new Set(possibleSecrets);
-    const scored = data.secrets.map((guess) => ({
+    const scored = guessPool.map((guess) => ({
       guess,
       entropy: calculateEntropyForGuess(guess, possibleSecrets),
       possible: remainingSet.has(guess),
